@@ -87,7 +87,10 @@ class MySpider(BaseSpider):
         app['address'] = sel.xpath("//div[@class='address']/text()").extract()[0].lstrip().rstrip()
 
         #get overall mark for the appartment
-        app['mark']=sel.xpath("//a[@class='flat-mark js-to-comments']/strong/text()").extract()[0]
+        try:
+            app['mark']=sel.xpath("//a[@class='flat-mark js-to-comments']/strong/text()").extract()[0]
+        except:
+            app['mark']=''
 
 
         Debug()
@@ -117,7 +120,6 @@ class MySpider(BaseSpider):
         #print(appartments)
         for link in appartments:
             yield scrapy.Request(link, callback=self.parseAppartment)
-            break
 
         nextPage = sel.xpath("//div[@class='pages']/a[last()]/@href").extract()[0]
         Debug()

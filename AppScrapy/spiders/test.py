@@ -4,10 +4,11 @@ from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.xlib.pydispatch import dispatcher
 
+import urllib.parse
 from AppScrapy.items import AppscrapyItem
 from termcolor import colored
 from selenium import webdriver
-import urllib.parse
+from .utils import changeDateFormat
 from time import sleep
 
 
@@ -81,12 +82,10 @@ class MySpider(BaseSpider):
             app['mark']=''
 
 
-        #Suspicious code goes here
-
-        #Debug()
-
-
-        #Debug()
+        if DEBUG:
+            Debug()
+            # Suspicious code goes here
+            Debug()
 
         #normalize all the results,remove all these spaces and \n's
         for key in app:
@@ -100,15 +99,13 @@ class MySpider(BaseSpider):
     def parse(self, response):
         sel = Selector(response)
         appartments = sel.xpath("//div[@class='item__main']/a/@href").extract()
-        print(appartments)
+        if DEBUG:
+            print(appartments)
         for link in appartments:
             print('Were going to scrapy this: {}'.format(link))
             yield scrapy.Request(link, callback=self.parseAppartment)
 
         nextPage = sel.xpath("//div[@class='pages']/a[last()]/@href").extract()[0]
-        # Debug()
-        # print('Im at {}'.format(response.url))
-        # Debug()
         nextPage = urllib.parse.urljoin(response.url, nextPage)
         if (nextPage!=response.url):
             nextPage=response.url[response.url.find('page')+5:]

@@ -11,6 +11,7 @@ import scrapy
 class AppscrapyItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    url = scrapy.Field()
     name = scrapy.Field()
     housingArea = scrapy.Field()
     minAmountOfNights = scrapy.Field()
@@ -23,5 +24,6 @@ class AppscrapyItem(scrapy.Item):
     minSum = scrapy.Field()
     freeDates = scrapy.Field()
     address = scrapy.Field()
+    mark = scrapy.Field()
 
 

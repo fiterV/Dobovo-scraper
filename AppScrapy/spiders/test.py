@@ -9,6 +9,7 @@ from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
 from scrapy.signalmanager import SignalManager
 from selenium import webdriver
+import urllib.parse
 from time import sleep
 import scrapy_splash
 
@@ -26,11 +27,10 @@ def changeDateFormat(date):
     month = date[5:7]
     day = date[8:]
     return "{}-{}-{}".format(day, month, year)
-
 class MySpider(BaseSpider):
     name='betty'
     allowed_domains = ['dobovo.com']
-    start_urls = ['http://www.dobovo.com/ua/%D0%BA%D0%B8%D1%97%D0%B2-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B8-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B1%D0%BE%D0%B2%D0%BE.html']
+    start_urls = ['http://www.dobovo.com/ua/%D0%BA%D0%B8%D1%97%D0%B2-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B8-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B1%D0%BE%D0%B2%D0%BE.html?page=181']
 
     def __init__(self):
         self.driver = webdriver.PhantomJS()
@@ -40,11 +40,12 @@ class MySpider(BaseSpider):
         self.driver.quit()
 
     def parseAppartment(self, response):
-        sleep(1)
+       # sleep(1)
         resp = self.driver.get(response.url)
         sel = Selector(text=self.driver.page_source)
 
         app = AppscrapyItem()
+        app['url']=response.url
         app['name'] = sel.xpath("//h1[@id='dbv_js_title']/text()").extract()[0]
 
         livingInfo = sel.xpath("//ul[@class='require']/li/span/text()").extract()
@@ -57,7 +58,10 @@ class MySpider(BaseSpider):
         app['berthCount'] = livingInfo[3]
         app['bathroomCount'] = livingInfo[4]
         app['owner'] = sel.xpath("//div[@class='owner__title']/span[1]/text()").extract()[0]
-        app['personalSpeaks'] = sel.xpath("//div[@class='owner__title']/div/text()").extract()[1]
+        try:
+            app['personalSpeaks'] = sel.xpath("//div[@class='owner__title']/div/text()").extract()[1]
+        except:
+            app['personalSpeaks'] = ''
 
         addAdvantages = sel.xpath("//span[@class='attr__item']/text()").extract()
         app['additionalAdvantages'] = ', '.join(addAdvantages)
@@ -77,14 +81,17 @@ class MySpider(BaseSpider):
             text = block[0]
             # print('Date = {} price = {}{}'.format(changeDateFormat(date), price, currency))
             app['freeDates'].append({
-                'date': date,
+                'date': changeDateFormat(date),
                 'price': price + currency,
             })
+        app['address'] = sel.xpath("//div[@class='address']/text()").extract()[0].lstrip().rstrip()
+
+        #get overall mark for the appartment
+        app['mark']=sel.xpath("//a[@class='flat-mark js-to-comments']/strong/text()").extract()[0]
+
 
         Debug()
 
-        address = sel.xpath("//div[@class='address']/text()").extract()[0].lstrip().rstrip()
-        print(address)
 
 #        with open('log.html', 'w') as f:
  #           print(self.driver.page_source, file=f)
@@ -107,14 +114,19 @@ class MySpider(BaseSpider):
 
 
         #print(''.join(appartments).encode('utf-8'))
-        print(appartments)
+        #print(appartments)
         for link in appartments:
-            return scrapy.Request(link, callback=self.parseAppartment)
+            yield scrapy.Request(link, callback=self.parseAppartment)
+            break
 
-
-        print("Size = {}".format(len(appartments)))
-
-        for i in range(10):
-            print(colored(
-                '-----------------------------------------------------------------------------------------------> Look over here, boy',
-                color='red'))
+        nextPage = sel.xpath("//div[@class='pages']/a[last()]/@href").extract()[0]
+        Debug()
+        print('Im at {}'.format(response.url))
+        Debug()
+        nextPage = urllib.parse.urljoin(response.url, nextPage)
+        if (nextPage!=response.url):
+            nextPage=response.url[response.url.find('page')+5:]
+            before = response.url[:response.url.find('page')+5]
+            nextPage=int(nextPage)+1
+            nextPage = before+str(nextPage)
+            yield scrapy.Request(nextPage)

@@ -24,7 +24,7 @@ def Debug():
 class MySpider(BaseSpider):
     name='betty'
     allowed_domains = ['dobovo.com']
-    start_urls = ['http://www.dobovo.com/ua/%D0%BA%D0%B8%D1%97%D0%B2-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B8-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B1%D0%BE%D0%B2%D0%BE.html?page=2']
+    start_urls = ['http://www.dobovo.com/ua/%D0%BA%D0%B8%D1%97%D0%B2-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B8-%D0%BF%D0%BE%D0%B4%D0%BE%D0%B1%D0%BE%D0%B2%D0%BE.html?page=1']
 
     def __init__(self):
         self.driver = webdriver.PhantomJS()
